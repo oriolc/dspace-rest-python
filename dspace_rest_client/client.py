@@ -686,6 +686,41 @@ class DSpaceClient:
             return r
 
     # PAGINATION
+    def get_subcommunities(self, uuid, page=0, size=20, sort=None):
+        """
+        Get subcommunities for a community
+        @param uuid:    string UUID of the community
+        @param page:    integer page (default: 0)
+        @param size:    integer size (default: 20)
+        @return:        list of subcommunities, or None if error
+        """
+        url = f'{self.API_ENDPOINT}/core/communities/{uuid}/subcommunities'
+        params = {}
+        if size is not None:
+            params['size'] = size
+        if page is not None:
+            params['page'] = page
+        if sort is not None:
+            params['sort'] = sort
+        try:
+            # This will throw a ValueError if not a valid UUID
+            id = UUID(uuid).version
+        except ValueError:
+            logging.error(f'Invalid community UUID: {uuid}')
+            return None
+        logging.debug(f'Performing get on {url}')
+        # Perform actual get
+        r_json = self.fetch_resource(url, params)
+
+        # Empty list
+        subcommunities = list()
+        if '_embedded' in r_json:
+            if 'subcommunities' in r_json['_embedded']:
+                for community_resource in r_json['_embedded']['subcommunities']:
+                    subcommunities.append(Community(community_resource))
+        
+        # Return list (populated or empty)
+        return subcommunities
     def get_communities(self, uuid=None, page=0, size=20, sort=None, top=False):
         """
         Get communities - either all, for single UUID, or all top-level (ie no sub-communities)
