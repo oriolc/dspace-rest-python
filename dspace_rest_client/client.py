@@ -345,7 +345,10 @@ class DSpaceClient:
                     return self.api_patch(url, operation, path, value, True)
         elif r.status_code == 200:
             # 200 Success
-            logging.info(f'successful patch update to {r.json()["type"]} {r.json()["id"]}')
+            if "id" in r.json():
+                logging.info(f'successful patch update to {r.json()["type"]} {r.json()["id"]}')
+            else:
+                logging.error(f"Response does not contain 'id'. Full response: {r.json()}")
 
         # Return the raw API response
         return r
@@ -684,6 +687,26 @@ class DSpaceClient:
         r = self.api_get(url, headers=h)
         if r.status_code == 200:
             return r
+
+    def order_bitstream(self, bundle_id, position_from, position_to):
+        """
+        Order bitstream
+        @param bundle_id: bundle id
+        @param position_from: initial position
+        @param position_to: end position
+        @return: full response object including headers, and content
+        """
+        url = f'{self.API_ENDPOINT}/core/bundles/{bundle_id}'
+        h = {'User-Agent': self.USER_AGENT, 'Authorization': self.get_short_lived_token()}
+        # "from": "/_links/bitstreams/1/href",
+        # "path": "/_links/bitstreams/0/href"
+        posfrom = f'/_links/bitstreams/{position_from}/href'
+        posto = f'/_links/bitstreams/{position_to}/href'
+        r = self.api_patch(url, self.PatchOperation.MOVE, posto, posfrom)
+        if r.status_code == 200:
+            return "Successful patch update"
+        else:
+            return f"PATCH request failed with status code {r.status_code}. Full response: {r.text}"
 
     # PAGINATION
     def get_subcommunities(self, uuid, page=0, size=20, sort=None):

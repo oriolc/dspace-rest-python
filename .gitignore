@@ -9,3 +9,8 @@ __pypackages__/
 env/
 venv/
 .idea/
+order_bitstreams.py
+regs-per-usuari.py
+sortida.sql
+start-pg.sh
+stop-pg.sh
